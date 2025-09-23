@@ -47,6 +47,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        festival: {
+          saffron: "hsl(var(--festival-saffron))",
+          red: "hsl(var(--festival-red))",
+          gold: "hsl(var(--festival-gold))",
+          cream: "hsl(var(--festival-cream))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -84,6 +90,14 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      backgroundImage: {
+        'gradient-festival': 'var(--gradient-festival)',
+        'gradient-warm': 'var(--gradient-warm)',
+      },
+      boxShadow: {
+        'festival': 'var(--shadow-festival)',
+        'warm': 'var(--shadow-warm)',
       },
     },
   },
