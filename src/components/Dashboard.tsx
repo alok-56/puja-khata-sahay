@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IndianRupee, Users, ShoppingCart, Wallet } from "lucide-react";
 
 // Mock data for demonstration
@@ -89,63 +90,76 @@ export function Dashboard() {
           </Button>
         </div>
 
-        {/* Transactions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
-          {/* Donations */}
-          <Card className="shadow-warm">
-            <CardHeader>
-              <CardTitle className="text-lg md:text-xl text-primary flex items-center">
-                <Users className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                Donations List
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 md:space-y-4">
-              {mockData.donations.map((donation) => (
-                <div key={donation.id} className="border-l-4 border-primary pl-3 md:pl-4 py-3 bg-festival-cream/50 rounded-r-lg">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-base md:text-lg">{donation.name}</h4>
-                      <p className="text-sm text-muted-foreground">{donation.village}</p>
-                      <p className="text-sm text-muted-foreground">{donation.phone}</p>
-                    </div>
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground self-start">
-                      <IndianRupee className="h-3 w-3 mr-1" />
-                      {donation.amount.toLocaleString('en-IN')}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        {/* Transactions with Tabs */}
+        <Tabs defaultValue="donations" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="donations" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Donations
+            </TabsTrigger>
+            <TabsTrigger value="expenses" className="flex items-center gap-2">
+              <ShoppingCart className="h-4 w-4" />
+              Expenses
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Expenses */}
-          <Card className="shadow-warm">
-            <CardHeader>
-              <CardTitle className="text-lg md:text-xl text-destructive flex items-center">
-                <ShoppingCart className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                Expenses List
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 md:space-y-4">
-              {mockData.expenses.map((expense) => (
-                <div key={expense.id} className="border-l-4 border-destructive pl-3 md:pl-4 py-3 bg-destructive/5 rounded-r-lg">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-base md:text-lg">{expense.name}</h4>
-                      <p className="text-sm font-medium text-destructive">{expense.expenseName}</p>
-                      <p className="text-xs text-muted-foreground">{expense.items.join(", ")}</p>
-                      <p className="text-sm text-muted-foreground">{expense.phone}</p>
+          <TabsContent value="donations">
+            <Card className="shadow-warm">
+              <CardHeader>
+                <CardTitle className="text-lg md:text-xl text-primary flex items-center">
+                  <Users className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                  Donations List
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 md:space-y-4">
+                {mockData.donations.map((donation) => (
+                  <div key={donation.id} className="border-l-4 border-primary pl-3 md:pl-4 py-3 bg-festival-cream/50 rounded-r-lg">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-base md:text-lg">{donation.name}</h4>
+                        <p className="text-sm text-muted-foreground">{donation.village}</p>
+                        <p className="text-sm text-muted-foreground">{donation.phone}</p>
+                      </div>
+                      <Badge variant="secondary" className="bg-primary text-primary-foreground self-start">
+                        <IndianRupee className="h-3 w-3 mr-1" />
+                        {donation.amount.toLocaleString('en-IN')}
+                      </Badge>
                     </div>
-                    <Badge variant="destructive" className="self-start">
-                      <IndianRupee className="h-3 w-3 mr-1" />
-                      {expense.amount.toLocaleString('en-IN')}
-                    </Badge>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="expenses">
+            <Card className="shadow-warm">
+              <CardHeader>
+                <CardTitle className="text-lg md:text-xl text-destructive flex items-center">
+                  <ShoppingCart className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                  Expenses List
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 md:space-y-4">
+                {mockData.expenses.map((expense) => (
+                  <div key={expense.id} className="border-l-4 border-destructive pl-3 md:pl-4 py-3 bg-destructive/5 rounded-r-lg">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-base md:text-lg">{expense.name}</h4>
+                        <p className="text-sm font-medium text-destructive">{expense.expenseName}</p>
+                        <p className="text-xs text-muted-foreground">{expense.items.join(", ")}</p>
+                        <p className="text-sm text-muted-foreground">{expense.phone}</p>
+                      </div>
+                      <Badge variant="destructive" className="self-start">
+                        <IndianRupee className="h-3 w-3 mr-1" />
+                        {expense.amount.toLocaleString('en-IN')}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Footer */}
         <div className="text-center mt-8 md:mt-12 p-4 md:p-6 bg-card rounded-lg shadow-warm mx-2 sm:mx-0">
