@@ -1,10 +1,17 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Lock } from "lucide-react";
+import { LogIn, Lock, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { login } from "@/api";
 
 interface LoginModalProps {
   onLogin: (isAdmin: boolean) => void;
@@ -16,33 +23,61 @@ export function LoginModal({ onLogin, isLoggedIn, onLogout }: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Check for existing token on mount
+  useEffect(() => {
+    const token = localStorage.getItem("admin_auth_token");
+    if (token) {
+      onLogin(true);
+    }
+  }, [onLogin]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Mock admin login - in real app, this would validate against backend
-    if (email === "admin@committee.com" && password === "admin123") {
+    setIsLoading(true);
+
+    try {
+      const response = await login(email, password);
+
+      localStorage.setItem("admin_auth_token", response.token);
+
       onLogin(true);
       setOpen(false);
       setEmail("");
       setPassword("");
+
       toast({
         title: "Login Successful",
-        description: "Welcome, Admin!",
+        description: `Welcome, ${response.admin.name}!`,
       });
-    } else {
+    } catch (error) {
       toast({
         title: "Login Failed",
-        description: "Invalid email or password",
+        description: error instanceof Error ? error.message : "Login failed",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_auth_token");
+    onLogout();
+    toast({
+      title: "Logged Out",
+      description: "You have been logged out successfully.",
+    });
   };
 
   if (isLoggedIn) {
     return (
-      <Button variant="outline" onClick={onLogout} className="flex items-center gap-2">
+      <Button
+        onClick={handleLogout}
+        className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black border-yellow-500 font-medium"
+      >
         <Lock className="h-4 w-4" />
         Logout Admin
       </Button>
@@ -52,7 +87,7 @@ export function LoginModal({ onLogin, isLoggedIn, onLogout }: LoginModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black border-yellow-500 font-medium">
           <LogIn className="h-4 w-4" />
           Admin Login
         </Button>
@@ -74,6 +109,7 @@ export function LoginModal({ onLogin, isLoggedIn, onLogout }: LoginModalProps) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@committee.com"
               required
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -85,14 +121,19 @@ export function LoginModal({ onLogin, isLoggedIn, onLogout }: LoginModalProps) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
               required
+              disabled={isLoading}
             />
           </div>
-          <Button type="submit" className="w-full">
-            Login
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
           </Button>
-          <p className="text-xs text-muted-foreground text-center">
-            Demo: admin@committee.com / admin123
-          </p>
         </form>
       </DialogContent>
     </Dialog>
