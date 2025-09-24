@@ -299,177 +299,224 @@ export function Dashboard() {
   };
 
   // Generate PDF report
-  const generatePDF = () => {
+  const generatePDF = async () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const currentData = activeTab === "donations" ? donations : expenses;
-    const title = activeTab === "donations" ? "Donations Report" : "Expenses Report";
-    const totalAmount = currentData.reduce((sum, item) => sum + item.amount, 0);
-
-    const html = `
-      <!DOCTYPE html>
+    // Show loading in the new window
+    printWindow.document.write(`
       <html>
-        <head>
-          <title>${title} - Durga Puja Committee</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-              color: #333;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 30px;
-              border-bottom: 2px solid #8B5CF6;
-              padding-bottom: 20px;
-            }
-            .header h1 {
-              color: #8B5CF6;
-              margin: 0;
-              font-size: 24px;
-            }
-            .header h2 {
-              color: #666;
-              margin: 5px 0;
-              font-size: 18px;
-            }
-            .header p {
-              color: #888;
-              margin: 5px 0;
-            }
-            .summary {
-              background: #f8f9fa;
-              padding: 15px;
-              border-radius: 8px;
-              margin-bottom: 20px;
-              border-left: 4px solid #8B5CF6;
-            }
-            .summary h3 {
-              margin: 0 0 10px 0;
-              color: #8B5CF6;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-            }
-            th, td {
-              border: 1px solid #ddd;
-              padding: 12px;
-              text-align: left;
-            }
-            th {
-              background-color: #8B5CF6;
-              color: white;
-              font-weight: bold;
-            }
-            tr:nth-child(even) {
-              background-color: #f9f9f9;
-            }
-            tr:hover {
-              background-color: #f5f5f5;
-            }
-            .amount {
-              font-weight: bold;
-              color: #8B5CF6;
-            }
-            .footer {
-              margin-top: 30px;
-              text-align: center;
-              color: #666;
-              border-top: 1px solid #ddd;
-              padding-top: 20px;
-            }
-            .total-row {
-              background-color: #e9ecef !important;
-              font-weight: bold;
-            }
-            .total-row td {
-              border-top: 2px solid #8B5CF6;
-            }
-            .date {
-              color: #666;
-              font-size: 12px;
-            }
-            @media print {
-              body { margin: 0; }
-              .no-print { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Durga Puja Committee</h1>
-            <h2>Tero Pakalmeri Dahutoli</h2>
-            <p>Financial Transparency Report</p>
-            <p><strong>${title}</strong></p>
-            <p class="date">Generated on: ${new Date().toLocaleDateString('en-IN', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}</p>
-          </div>
-
-          <div class="summary">
-            <h3>Summary</h3>
-            <p><strong>Total Received:</strong> ₹${summary.totalReceived.toLocaleString('en-IN')}</p>
-            <p><strong>Total Expenses:</strong> ₹${summary.totalExpenses.toLocaleString('en-IN')}</p>
-            <p><strong>Remaining Balance:</strong> ₹${summary.remaining.toLocaleString('en-IN')}</p>
-            <p><strong>Total ${activeTab}:</strong> ₹${totalAmount.toLocaleString('en-IN')} (${currentData.length} entries)</p>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>S.No.</th>
-                <th>${activeTab === "donations" ? "Donor Name" : "Vendor/Purpose"}</th>
-                ${activeTab === "expenses" ? "<th>Expense Type</th>" : ""}
-                <th>Village</th>
-                <th>Phone</th>
-                ${activeTab === "expenses" ? "<th>Items</th>" : ""}
-                <th>Amount (₹)</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${currentData.map((item, index) => `
-                <tr>
-                  <td>${index + 1}</td>
-                  <td>${item.name || (activeTab === "donations" ? "Anonymous" : "Unknown")}</td>
-                  ${activeTab === "expenses" ? `<td>${item.expence_name || "General Expense"}</td>` : ""}
-                  <td>${item.village}</td>
-                  <td>${item.number}</td>
-                  ${activeTab === "expenses" ? `<td>${item.items.join(", ") || "N/A"}</td>` : ""}
-                  <td class="amount">₹${item.amount.toLocaleString('en-IN')}</td>
-                  <td>${new Date(item.createdAt).toLocaleDateString('en-IN')}</td>
-                </tr>
-              `).join('')}
-              <tr class="total-row">
-                <td colspan="${activeTab === "donations" ? "5" : "7"}" style="text-align: right;"><strong>Total:</strong></td>
-                <td class="amount"><strong>₹${totalAmount.toLocaleString('en-IN')}</strong></td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
-
-
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
+        <body style="font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+          <div style="text-align: center;">
+            <div style="border: 4px solid #f3f3f3; border-top: 4px solid #8B5CF6; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 0 auto 20px;"></div>
+            <p>Generating PDF report... Please wait</p>
+            <style>
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
               }
-            }
-          </script>
+            </style>
+          </div>
         </body>
       </html>
-    `;
+    `);
 
-    printWindow.document.write(html);
-    printWindow.document.close();
+    try {
+      // Fetch all data for PDF export
+      const response = await getInvoices({
+        type: activeTab === "donations" ? "donation" : "expence",
+        name: searchTerm || undefined,
+        full: true  // This will get all matching records, not just current page
+      });
+
+      const allData = response.invoices.filter(invoice => 
+        activeTab === "donations" ? invoice.invoice_type === "donation" : invoice.invoice_type === "expence"
+      );
+      
+      const title = activeTab === "donations" ? "Donations Report" : "Expenses Report";
+      const totalAmount = allData.reduce((sum, item) => sum + item.amount, 0);
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${title} - Durga Puja Committee</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                color: #333;
+              }
+              .header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #8B5CF6;
+                padding-bottom: 20px;
+              }
+              .header h1 {
+                color: #8B5CF6;
+                margin: 0;
+                font-size: 24px;
+              }
+              .header h2 {
+                color: #666;
+                margin: 5px 0;
+                font-size: 18px;
+              }
+              .header p {
+                color: #888;
+                margin: 5px 0;
+              }
+              .summary {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                border-left: 4px solid #8B5CF6;
+              }
+              .summary h3 {
+                margin: 0 0 10px 0;
+                color: #8B5CF6;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+              }
+              th, td {
+                border: 1px solid #ddd;
+                padding: 12px;
+                text-align: left;
+              }
+              th {
+                background-color: #8B5CF6;
+                color: white;
+                font-weight: bold;
+              }
+              tr:nth-child(even) {
+                background-color: #f9f9f9;
+              }
+              tr:hover {
+                background-color: #f5f5f5;
+              }
+              .amount {
+                font-weight: bold;
+                color: #8B5CF6;
+              }
+              .footer {
+                margin-top: 30px;
+                text-align: center;
+                color: #666;
+                border-top: 1px solid #ddd;
+                padding-top: 20px;
+              }
+              .total-row {
+                background-color: #e9ecef !important;
+                font-weight: bold;
+              }
+              .total-row td {
+                border-top: 2px solid #8B5CF6;
+              }
+              .date {
+                color: #666;
+                font-size: 12px;
+              }
+              @media print {
+                body { margin: 0; }
+                .no-print { display: none; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Durga Puja Committee</h1>
+              <h2>Tero Pakalmeri Dahutoli</h2>
+              <p><strong>${title}</strong></p>
+              <p class="date">Generated on: ${new Date().toLocaleDateString('en-IN', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}</p>
+            </div>
+
+            <div class="summary">
+              <h3>Summary</h3>
+              <p><strong>Total Received:</strong> ₹${summary.totalReceived.toLocaleString('en-IN')}</p>
+              <p><strong>Total Expenses:</strong> ₹${summary.totalExpenses.toLocaleString('en-IN')}</p>
+              <p><strong>Remaining Balance:</strong> ₹${summary.remaining.toLocaleString('en-IN')}</p>
+              <p><strong>Total ${activeTab}:</strong> ₹${totalAmount.toLocaleString('en-IN')} (${allData.length} entries)</p>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>S.No.</th>
+                  <th>${activeTab === "donations" ? "Donor Name" : "Vendor/Purpose"}</th>
+                  ${activeTab === "expenses" ? "<th>Expense Type</th>" : ""}
+                  <th>Village</th>
+                  <th>Phone</th>
+                  ${activeTab === "expenses" ? "<th>Items</th>" : ""}
+                  <th>Amount (₹)</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allData.map((item, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.name || (activeTab === "donations" ? "Anonymous" : "Unknown")}</td>
+                    ${activeTab === "expenses" ? `<td>${item.expence_name || "General Expense"}</td>` : ""}
+                    <td>${item.village}</td>
+                    <td>${item.number}</td>
+                    ${activeTab === "expenses" ? `<td>${item.items.join(", ") || "N/A"}</td>` : ""}
+                    <td class="amount">₹${item.amount.toLocaleString('en-IN')}</td>
+                    <td>${new Date(item.createdAt).toLocaleDateString('en-IN')}</td>
+                  </tr>
+                `).join('')}
+                <tr class="total-row">
+                  <td colspan="${activeTab === "donations" ? "5" : "7"}" style="text-align: right;"><strong>Total:</strong></td>
+                  <td class="amount"><strong>₹${totalAmount.toLocaleString('en-IN')}</strong></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="footer">
+              <p>This report contains all ${activeTab} records as of ${new Date().toLocaleDateString('en-IN')}</p>
+            </div>
+
+            <script>
+              window.onload = function() {
+                window.print();
+                window.onafterprint = function() {
+                  window.close();
+                }
+              }
+            </script>
+          </body>
+        </html>
+      `;
+
+      // Clear loading and write the actual content
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      printWindow.document.open();
+      printWindow.document.write(`
+        <html>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h2 style="color: #dc2626;">Error Generating PDF</h2>
+            <p>There was an error generating the PDF report. Please try again.</p>
+            <button onclick="window.close()" style="padding: 10px 20px; background: #8B5CF6; color: white; border: none; border-radius: 5px; cursor: pointer;">Close</button>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
   };
 
   // Transform API data for display

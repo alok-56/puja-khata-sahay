@@ -145,6 +145,7 @@ export const getInvoices = async (options?: {
   limit?: number;
   type?: "donation" | "expence";
   name?: string;
+  full?: boolean;  // <-- Add this option
 }): Promise<{
   total: number;
   page: number;
@@ -158,6 +159,7 @@ export const getInvoices = async (options?: {
   if (options?.limit) params.append("limit", options.limit.toString());
   if (options?.type) params.append("type", options.type);
   if (options?.name) params.append("name", options.name);
+  if (options?.full) params.append("full", "true");  // <-- Append full if true
 
   const response = await fetch(`${BASE_URL}/invoices?${params.toString()}`, {
     method: "GET",
@@ -172,6 +174,7 @@ export const getInvoices = async (options?: {
 
   return await response.json();
 };
+
 
 export const fetchSummary = async (): Promise<SummaryResponse | null> => {
   try {
