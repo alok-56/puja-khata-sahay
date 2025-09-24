@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoginModal } from "@/components/LoginModal";
 import { DonationModal } from "@/components/DonationModal";
 import { ExpenseModal } from "@/components/ExpenseModal";
-import { IndianRupee, Users, ShoppingCart, Wallet, Trash2 } from "lucide-react";
+import { IndianRupee, Users, ShoppingCart, Wallet, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -31,6 +32,7 @@ const initialMockData = {
 export function Dashboard() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [mockData, setMockData] = useState(initialMockData);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   const handleLogin = (isAdmin: boolean) => {
@@ -205,6 +207,19 @@ export function Dashboard() {
           </div>
         )}
 
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative max-w-md mx-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search donations and expenses..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
         {/* Transactions with Tabs */}
         <Tabs defaultValue="donations" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -227,7 +242,13 @@ export function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 md:space-y-4">
-                {mockData.donations.map((donation) => (
+                {mockData.donations
+                  .filter((donation) =>
+                    donation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    donation.village.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    donation.phone.includes(searchTerm)
+                  )
+                  .map((donation) => (
                   <div key={donation.id} className="border-l-4 border-primary pl-3 md:pl-4 py-3 bg-festival-cream/50 rounded-r-lg">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1">
@@ -273,7 +294,14 @@ export function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 md:space-y-4">
-                {mockData.expenses.map((expense) => (
+                {mockData.expenses
+                  .filter((expense) =>
+                    expense.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    expense.expenseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    expense.phone.includes(searchTerm) ||
+                    expense.items.some(item => item.toLowerCase().includes(searchTerm.toLowerCase()))
+                  )
+                  .map((expense) => (
                   <div key={expense.id} className="border-l-4 border-destructive pl-3 md:pl-4 py-3 bg-destructive/5 rounded-r-lg">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1">
