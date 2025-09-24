@@ -1,11 +1,17 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { IndianRupee, Users, ShoppingCart, Wallet } from "lucide-react";
+import { LoginModal } from "@/components/LoginModal";
+import { DonationModal } from "@/components/DonationModal";
+import { ExpenseModal } from "@/components/ExpenseModal";
+import { IndianRupee, Users, ShoppingCart, Wallet, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
 
 // Mock data for demonstration
-const mockData = {
+const initialMockData = {
   totalReceived: 245000,
   totalExpenses: 180000,
   remaining: 65000,
@@ -23,14 +29,125 @@ const mockData = {
 };
 
 export function Dashboard() {
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [mockData, setMockData] = useState(initialMockData);
+  const { toast } = useToast();
+
+  const handleLogin = (isAdmin: boolean) => {
+    setIsAdminLoggedIn(isAdmin);
+  };
+
+  const handleLogout = () => {
+    setIsAdminLoggedIn(false);
+  };
+
+  const handleAddDonation = (newDonation: Omit<typeof mockData.donations[0], 'id'>) => {
+    const donation = { ...newDonation, id: Date.now() };
+    setMockData(prev => ({
+      ...prev,
+      donations: [...prev.donations, donation],
+      totalReceived: prev.totalReceived + donation.amount,
+      remaining: (prev.totalReceived + donation.amount) - prev.totalExpenses
+    }));
+  };
+
+  const handleEditDonation = (donationId: number, updatedDonation: Omit<typeof mockData.donations[0], 'id'>) => {
+    setMockData(prev => {
+      const oldDonation = prev.donations.find(d => d.id === donationId);
+      const donations = prev.donations.map(d => 
+        d.id === donationId ? { ...updatedDonation, id: donationId } : d
+      );
+      const totalReceived = prev.totalReceived - (oldDonation?.amount || 0) + updatedDonation.amount;
+      return {
+        ...prev,
+        donations,
+        totalReceived,
+        remaining: totalReceived - prev.totalExpenses
+      };
+    });
+  };
+
+  const handleDeleteDonation = (donationId: number) => {
+    setMockData(prev => {
+      const donation = prev.donations.find(d => d.id === donationId);
+      const donations = prev.donations.filter(d => d.id !== donationId);
+      const totalReceived = prev.totalReceived - (donation?.amount || 0);
+      return {
+        ...prev,
+        donations,
+        totalReceived,
+        remaining: totalReceived - prev.totalExpenses
+      };
+    });
+    toast({
+      title: "Donation Deleted",
+      description: "Donation has been successfully deleted",
+    });
+  };
+
+  const handleAddExpense = (newExpense: Omit<typeof mockData.expenses[0], 'id'>) => {
+    const expense = { ...newExpense, id: Date.now() };
+    setMockData(prev => ({
+      ...prev,
+      expenses: [...prev.expenses, expense],
+      totalExpenses: prev.totalExpenses + expense.amount,
+      remaining: prev.totalReceived - (prev.totalExpenses + expense.amount)
+    }));
+  };
+
+  const handleEditExpense = (expenseId: number, updatedExpense: Omit<typeof mockData.expenses[0], 'id'>) => {
+    setMockData(prev => {
+      const oldExpense = prev.expenses.find(e => e.id === expenseId);
+      const expenses = prev.expenses.map(e => 
+        e.id === expenseId ? { ...updatedExpense, id: expenseId } : e
+      );
+      const totalExpenses = prev.totalExpenses - (oldExpense?.amount || 0) + updatedExpense.amount;
+      return {
+        ...prev,
+        expenses,
+        totalExpenses,
+        remaining: prev.totalReceived - totalExpenses
+      };
+    });
+  };
+
+  const handleDeleteExpense = (expenseId: number) => {
+    setMockData(prev => {
+      const expense = prev.expenses.find(e => e.id === expenseId);
+      const expenses = prev.expenses.filter(e => e.id !== expenseId);
+      const totalExpenses = prev.totalExpenses - (expense?.amount || 0);
+      return {
+        ...prev,
+        expenses,
+        totalExpenses,
+        remaining: prev.totalReceived - totalExpenses
+      };
+    });
+    toast({
+      title: "Expense Deleted",
+      description: "Expense has been successfully deleted",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-warm">
       {/* Header */}
       <div className="bg-gradient-festival text-white py-6 md:py-8 shadow-festival">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-2xl md:text-4xl font-bold mb-2">Durga Puja Committee</h1>
-          <p className="text-lg md:text-xl opacity-90">Tero Pakalmeri Dahutoli</p>
-          <p className="text-sm md:text-lg opacity-80 mt-2">Financial Transparency & Accounts</p>
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl md:text-4xl font-bold mb-2">Durga Puja Committee</h1>
+              <p className="text-lg md:text-xl opacity-90">Tero Pakalmeri Dahutoli</p>
+              <p className="text-sm md:text-lg opacity-80 mt-2">Financial Transparency & Accounts</p>
+            </div>
+            <div className="flex justify-center sm:justify-end">
+              <LoginModal 
+                onLogin={handleLogin} 
+                isLoggedIn={isAdminLoggedIn} 
+                onLogout={handleLogout} 
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -80,15 +197,13 @@ export function Dashboard() {
           </Card>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6 md:mb-8 px-4 sm:px-0 sm:justify-center">
-          <Button variant="default" className="shadow-warm flex-1 sm:flex-none">
-            Add New Donation
-          </Button>
-          <Button variant="destructive" className="shadow-warm flex-1 sm:flex-none">
-            Add New Expense
-          </Button>
-        </div>
+        {/* Action Buttons - Only show if admin is logged in */}
+        {isAdminLoggedIn && (
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 md:mb-8 px-4 sm:px-0 sm:justify-center">
+            <DonationModal onSave={handleAddDonation} />
+            <ExpenseModal onSave={handleAddExpense} />
+          </div>
+        )}
 
         {/* Transactions with Tabs */}
         <Tabs defaultValue="donations" className="w-full">
@@ -120,10 +235,28 @@ export function Dashboard() {
                         <p className="text-sm text-muted-foreground">{donation.village}</p>
                         <p className="text-sm text-muted-foreground">{donation.phone}</p>
                       </div>
-                      <Badge variant="secondary" className="bg-primary text-primary-foreground self-start">
-                        <IndianRupee className="h-3 w-3 mr-1" />
-                        {donation.amount.toLocaleString('en-IN')}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="bg-primary text-primary-foreground">
+                          <IndianRupee className="h-3 w-3 mr-1" />
+                          {donation.amount.toLocaleString('en-IN')}
+                        </Badge>
+                        {isAdminLoggedIn && (
+                          <div className="flex gap-1">
+                            <DonationModal 
+                              donation={donation} 
+                              onSave={(updatedDonation) => handleEditDonation(donation.id, updatedDonation)} 
+                              isEdit 
+                            />
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDeleteDonation(donation.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -149,10 +282,28 @@ export function Dashboard() {
                         <p className="text-xs text-muted-foreground">{expense.items.join(", ")}</p>
                         <p className="text-sm text-muted-foreground">{expense.phone}</p>
                       </div>
-                      <Badge variant="destructive" className="self-start">
-                        <IndianRupee className="h-3 w-3 mr-1" />
-                        {expense.amount.toLocaleString('en-IN')}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="destructive">
+                          <IndianRupee className="h-3 w-3 mr-1" />
+                          {expense.amount.toLocaleString('en-IN')}
+                        </Badge>
+                        {isAdminLoggedIn && (
+                          <div className="flex gap-1">
+                            <ExpenseModal 
+                              expense={expense} 
+                              onSave={(updatedExpense) => handleEditExpense(expense.id, updatedExpense)} 
+                              isEdit 
+                            />
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDeleteExpense(expense.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
