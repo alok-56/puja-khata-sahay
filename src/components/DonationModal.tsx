@@ -19,6 +19,7 @@ interface Donation {
   phone: string;
   village: string;
   amount: number;
+  due: number;
 }
 
 interface DonationModalProps {
@@ -39,6 +40,7 @@ export function DonationModal({
     phone: donation?.phone || "",
     village: donation?.village || "",
     amount: donation?.amount || 0,
+    due: donation?.due || 0,
   });
   const { toast } = useToast();
 
@@ -54,6 +56,25 @@ export function DonationModal({
       toast({
         title: "Validation Error",
         description: "Please fill all fields with valid data",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate that due amount is not negative and not more than the total amount
+    if (formData.due < 0) {
+      toast({
+        title: "Validation Error",
+        description: "Due amount cannot be negative",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.due > formData.amount) {
+      toast({
+        title: "Validation Error",
+        description: "Due amount cannot be more than the total amount",
         variant: "destructive",
       });
       return;
@@ -86,6 +107,7 @@ export function DonationModal({
           items: [], // Empty array as per API structure
           amount: formData.amount,
           village: formData.village,
+          due: formData.due, // Include due in API call
         };
 
         // Call your existing createDonation API
@@ -97,6 +119,7 @@ export function DonationModal({
           phone: response.number,
           village: response.village,
           amount: response.amount,
+          due: response.due || formData.due, // Use response due or fallback to form data
         };
 
         onSave(donationData);
@@ -105,7 +128,7 @@ export function DonationModal({
       setOpen(false);
 
       if (!isEdit) {
-        setFormData({ name: "", phone: "", village: "", amount: 0 });
+        setFormData({ name: "", phone: "", village: "", amount: 0, due: 0 });
       }
 
       toast({
@@ -210,6 +233,26 @@ export function DonationModal({
               required
               disabled={isLoading}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="due">Due Amount (₹)</Label>
+            <Input
+              id="due"
+              type="number"
+              value={formData.due}
+              onChange={(e) =>
+                setFormData({ ...formData, due: Number(e.target.value) })
+              }
+              placeholder="Enter due amount"
+              min="0"
+              max={formData.amount}
+              disabled={isLoading}
+            />
+            {formData.amount > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Paid: ₹{formData.amount - formData.due} | Due: ₹{formData.due}
+              </p>
+            )}
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (

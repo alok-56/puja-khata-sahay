@@ -13,6 +13,7 @@ interface SummaryResponse {
   totalReceived: number;
   totalExpenses: number;
   remaining: number;
+  totaldue: number;
 }
 
 interface Invoice {
@@ -26,6 +27,7 @@ interface Invoice {
   invoice_type: "donation" | "expence";
   createdAt: string;
   updatedAt: string;
+  due: number;
 }
 
 export const login = async (
@@ -53,6 +55,7 @@ export const createDonation = async (
     items: string[];
     amount: number;
     village: string;
+    due: number;
   }
 ): Promise<Invoice> => {
   const response = await fetch(`${BASE_URL}/donation/create`, {
@@ -145,7 +148,8 @@ export const getInvoices = async (options?: {
   limit?: number;
   type?: "donation" | "expence";
   name?: string;
-  full?: boolean;  // <-- Add this option
+  full?: boolean; // <-- Add this option
+  onlyDue?: boolean;
 }): Promise<{
   total: number;
   page: number;
@@ -159,7 +163,8 @@ export const getInvoices = async (options?: {
   if (options?.limit) params.append("limit", options.limit.toString());
   if (options?.type) params.append("type", options.type);
   if (options?.name) params.append("name", options.name);
-  if (options?.full) params.append("full", "true");  // <-- Append full if true
+  if (options?.full) params.append("full", "true"); // <-- Append full if true
+  if (options?.onlyDue) params.append("onlyDue", "true");
 
   const response = await fetch(`${BASE_URL}/invoices?${params.toString()}`, {
     method: "GET",
@@ -174,7 +179,6 @@ export const getInvoices = async (options?: {
 
   return await response.json();
 };
-
 
 export const fetchSummary = async (): Promise<SummaryResponse | null> => {
   try {
