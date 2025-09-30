@@ -1,4 +1,4 @@
-const BASE_URL = "https://puja-backend-beta.vercel.app/api/v1/admin";
+const BASE_URL = "https://puja-backend.onrender.com/api/v1/admin";
 
 interface LoginResponse {
   token: string;
